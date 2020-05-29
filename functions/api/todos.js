@@ -1,6 +1,6 @@
 const { db } = require('../util/admin')
 
-const homeScreen = (req,res) => {
+exports.homeScreen = (req,res) => {
 	// res = "bye";
 	return res.json("hi");
 };
@@ -16,7 +16,7 @@ const homeScreen = (req,res) => {
 // 	return res.json(todos);	
 // }
 
-const getAllTodos = (req, res) => {
+exports.getAllTodos = (req, res) => {
 
 	db.collection('todos')
 		.orderBy('createdAt', 'desc')
@@ -32,7 +32,9 @@ const getAllTodos = (req, res) => {
 				});
 			});	//forEach takes a callback
 		
-			return res.json(todos);
+			console.log("Worked with " + todos);
+			if( todos.length != 0 ) return res.json(todos);
+			else return res.json({todos: 'No todos left! :D'});
 		})
 		.catch((err) => {
 			console.log(err);
@@ -41,7 +43,7 @@ const getAllTodos = (req, res) => {
 
 };
 
-const deleteTodo = (req, res) => {
+exports.deleteTodo = (req, res) => {
 	const detchedDoc = db.doc('todos/$(req.params.todoId)'); //THINK HERE
 
 	fetchedDoc.get().then( (doc) => {
@@ -63,7 +65,7 @@ const deleteTodo = (req, res) => {
 	});
 };
 
-const editTodo = (req, res) => {
+exports.editTodo = (req, res) => {
 	if(req.body.todoId || req.body.createdAt){
 		res.status(403).json({message: "Not allowed to edit"});
 	}
@@ -79,10 +81,42 @@ const editTodo = (req, res) => {
 		});
 };
 
-exports.homeScreen;
-exports.getAllTodos;
-exports.deleteTodo;
-exports.editTodo;
+/*HTTP Codes - 
+400 -> Bad Request
+401 -> Unauthorized (Similar to 403)
+403 -> Forbidden
+405 -> Method Not allowed (a request method not supported, for eg. GET on a form)
+*/
+
+exports.postOneTodo = (req, res) => {
+	if ( req.body.body.trim() === '' || req.body.title.trim() === ''){
+		return res.status(400).json({ error: 'Body and title of Todo must not be empty!'});
+	}
+
+	const newTodoItem = {
+		title: req.body.title,
+		body: req.body.body,
+		createdAt: new Date().toISOString()		
+	}
+
+	db.collection('todos')
+		.add(newTodoItem)
+		.then((doc) => {
+			const responseTodoItem = newTodoItem;
+			responseTodoItem.id = doc.id;
+			return res.json(responseTodoItem);
+		})
+		.catch( (err) => {
+			res.status(500).json({ error: 'Something went Wrong'});
+			console.error( err );
+		});
+};
+
+
+
+// exports.homeScreen = homeScreen;	//Else, this ERROR shows : Error: Route.post() requires a callback function but got a [object Undefined]
+// module.exports = { ...};
+	//QUESTION - Why arent they working
 
 // exports.getAllTodos = (req, res) => {
 // 	todos = [

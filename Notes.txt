@@ -1,4 +1,0 @@
-1. After installing firebase-tools, we need to sign in the firebase CLI
-    firebase login
-    firebase projects:list
-2. firebase-admin, has the firestore package to manage the database
